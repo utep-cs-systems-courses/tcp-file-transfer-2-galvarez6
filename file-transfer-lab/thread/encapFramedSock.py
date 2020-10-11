@@ -33,10 +33,9 @@ class EncapFramedSock:
                     self.rbuf = self.rbuf[msgLength:]
                     return payload
             r = self.sock.recv(100)
-            self.rubuf += r
+            self.rbuf += r
             if len(r) == 0:
                 if len(self.rbuf) != 0:
                     print("FramedReceive: state=%s, length=%d, self.rbuf=%s" % (state, msgLength, self.rbuf))
                 return None
             if debugPrint: print("FramedReceive: state=%s, lenght=%d, self.rbuf%s" % (state, msgLength, self.rbuf))
-            
