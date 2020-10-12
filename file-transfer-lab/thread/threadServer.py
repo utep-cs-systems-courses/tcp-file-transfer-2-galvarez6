@@ -27,10 +27,6 @@ lsock.bind(bindAddr)
 lsock.listen(5)
 print("listening on:", bindAddr)
 
-sock, addr = lsock.accept()
-
-print("connection rec'd from", addr)
-
 
 from threading import Thread;
 from encapFramedSock import EncapFramedSock
@@ -42,12 +38,42 @@ class Server(Thread):
         self.fsock = EncapFramedSock(sockAddr)
     def run(self):
         print("new thread handling connection from", self.addr)
+        numFiles = 0
         while True:
-            payload = self.fsock.receive(debug)
-            #write to the new file in wb write binary
-            outfile = open("fromclient.txt", "wb")
-            outfile.write(payload)
-            self.fsock.send(b"new file saved")
+            #recieve the name of the file
+            fileFromClient = self.fsock.receive()
+            payload = self.fsock.receive()
+            print("got file: " + fileFromClient.decode())
+            print("contents of file: " + payload.decode())
+
+            #write to new file on server
+            #check if file exists
+            #this will influence the file name by placing a number next to it
+            if exists(fileFromClient):
+                numFiles = numFiles + 1
+
+            fileNew = str(numFiles)+fileFromClient.decode()
+            serverFile = open(fileNew, 'wb')
+            serverFile.write(payload)
+
+            # #get the name of the file and message from the testClient
+            # #the file name will be used to write to a new file of the same
+            # #name on the server side
+            # fileFromClient, payload = self.fsock.receive(debug)
+            # #check to see if the contents of the
+            # if debug:
+            #     print("Received: ", payload)
+            #     #there was an issue exit with a problem
+            # if payload is None:
+            #     print("EMPTY CONTENTS")
+            #     sys.exit(1)
+            # #write to the new file in wb write binary
+            # fileFromClient = fileFromClient.decode()
+            # outfile = open(fileFromClient+"1", "wb")
+            # outfile.write(payload)
+            # print("saved file")
+            # outfile.close()
+
 
 
 while True:
