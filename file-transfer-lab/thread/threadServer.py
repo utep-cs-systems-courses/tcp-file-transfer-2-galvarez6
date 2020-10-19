@@ -31,6 +31,16 @@ print("listening on:", bindAddr)
 from threading import Thread;
 from encapFramedSock import EncapFramedSock
 
+#globally declare a list so the list is present during the duration of the descriptor
+fileLockList = []
+#when adding all we care about is adding the file onto the list and not
+#the position it geos to so we can use append() to add to the end of the list
+#but then we also need to get it position to find out where it is to remove it
+#just in case more threads run at the same time and append to the list
+#however instead of pop() we can use remove(value)
+#it removes the first element of the list with that same value
+
+
 class Server(Thread):
     def __init__(self, sockAddr):
         Thread.__init__(self)
@@ -42,20 +52,50 @@ class Server(Thread):
         while True:
             #recieve the name of the file
             fileFromClient = self.fsock.receive()
+            fileNameFromC = fileFromClient.decode()
+            #check if the file is in the list of files being used at the moment
+            #if not append it so we know what files are being used and are locked
+            if(fileNameFromC not in fileLockList):
+                fileLockList.append(fileNameFromC)
+            #else if the file is in the list we have to make the thread wanting to use it wait
+            #to acquire the lock
+
+
+
+            #####lock this critical area for threads that dont have a lock so they cannot access this part
             payload = self.fsock.receive()
+            #client sent the name of the file first so we got that
+            #we can use the name to lock the file descriptor while its being used
+            #we can put the name of the file on a dictionary/list/array object and if other threads
+            #want to write to that same file they check if it is on the stack
+            #if it is they have to wait for the lock
+            #if not the we give the lock to the thread that wants to
+            #write to that file on the server with that name
+            #and when the thread is done remove the file name from the file dictionary/list/array object
             print("got file: " + fileFromClient.decode())
             print("contents of file: " + payload.decode())
-
             #write to new file on server
             #check if file exists
             #this will influence the file name by placing a number next to it
-            if exists(fileFromClient):
-                numFiles = numFiles + 1
+
+            ######
+            #for now this is useless
+            #if exists(fileFromClient):
+                #numFiles = numFiles + 1
+            ####
 
             fileNew = str(numFiles)+fileFromClient.decode()
             serverFile = open(fileNew, 'wb')
             serverFile.write(payload)
+            serverFile.close()
+            #done with this file close it and pop it from the list so it can be used again
+            #our own method
+            fileLockList.remove(fileNameFromC)
+            ######end of lock
 
+
+
+            #thrash but dont wanna get rid of 
             # #get the name of the file and message from the testClient
             # #the file name will be used to write to a new file of the same
             # #name on the server side
