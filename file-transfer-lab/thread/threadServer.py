@@ -62,6 +62,7 @@ class Server(Thread):
                 fileLockList.append(fileNameFromC)
 
                 print("LOCKING FILE: "+fileNameFromC)
+                print(*fileLockList)
                 locker.acquire()
                 #####lock this critical area for threads that dont have a lock so they cannot access this part
                 payload = self.fsock.receive()
@@ -88,6 +89,7 @@ class Server(Thread):
                 fileLockList.remove(fileNameFromC)
                 locker.release()
                 print("UNLOCKING FILE: "+fileNameFromC)
+                print(*fileLockList)
                 ######end of lock
             #else if the file is in the list we have to make the thread wanting to use it wait
             #to acquire the lock

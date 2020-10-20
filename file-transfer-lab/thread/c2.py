@@ -47,13 +47,11 @@ while True:
     #open in read binary mode
     opener = open(fileToSend,'rb')
     print("Going to sleep")
-
     #assign contents of read file to payload to send to server
     payload = opener.read()
     #send the file name first in binary
     fsock.send(fileToSend.encode())
     print("file name send: " + fileToSend)
-    time.sleep(10)
     #send the contents of the file with payload
     fsock.send(payload)
     print("sending data: " + payload.decode())
